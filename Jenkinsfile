@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Clone Repo') {
             steps {
-                git 'https://github.com/yourusername/yourrepo.git'
+                git 'https://github.com/ridha-gn/devops-fastapi-project'
             }
         }
 
