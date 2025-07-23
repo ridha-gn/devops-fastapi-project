@@ -1,12 +1,7 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Clone Repo') {
-            steps {
-                git 'https://github.com/ridha-gn/devops-fastapi-project'
-            }
-        }
+   
 
         stage('Build Docker Image') {
             steps {
