@@ -4,7 +4,6 @@ pipeline {
     environment {
         REPO_URL = 'https://github.com/ridha-gn/devops-fastapi-project.git'
         IMAGE_NAME = 'fastapi-app'
-      
         BRANCH_NAME = 'main'
         GIT_CREDENTIALS_ID = 'b278af6a-9da4-4130-87bd-bc050208161b'
     }
@@ -24,7 +23,7 @@ pipeline {
             }
         }
 
-        stage('Run Docker Container (Local)') {
+        stage('Run Docker Container') {
             steps {
                 script {
                     sh "docker run -d -p 8000:8000 --name fastapi-container ${IMAGE_NAME}"
@@ -35,7 +34,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    // Only if using Kubernetes
+                    // Optional: remove if not using Kubernetes
                     sh '''
                     kubectl delete deployment fastapi-deployment --ignore-not-found=true
                     kubectl apply -f k8s/deployment.yaml
@@ -52,8 +51,14 @@ pipeline {
             sh "docker rm -f fastapi-container || true"
         }
         success {
-            echo '✅ Pipeline finished successfully!'
+            echo '✅ Pipeline completed successfully!'
         }
+        failure {
+            echo '❌ Pipeline failed.'
+        }
+    }
+}
+
         failure {
             echo '❌ Pipeline failed.'
         }
