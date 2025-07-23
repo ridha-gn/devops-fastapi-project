@@ -56,11 +56,9 @@ pipeline {
         failure {
             echo '❌ Pipeline failed.'
         }
+       
     }
 }
 
-        failure {
-            echo '❌ Pipeline failed.'
-        }
-    }
-}
+        
+
