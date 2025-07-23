@@ -2,63 +2,52 @@ pipeline {
     agent any
 
     environment {
-        REPO_URL = 'https://github.com/ridha-gn/devops-fastapi-project.git'
         IMAGE_NAME = 'fastapi-app'
-        BRANCH_NAME = 'main'
-        GIT_CREDENTIALS_ID = 'b278af6a-9da4-4130-87bd-bc050208161b'
+        DOCKERHUB_USER = credentials('dockerhub-username')
+        DOCKERHUB_PASSWORD = credentials('dockerhub-password')
+    }
+
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Git branch to build')
+        booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run unit tests?')
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git credentialsId: "${GIT_CREDENTIALS_ID}", url: "${REPO_URL}", branch: "${BRANCH_NAME}"
+                git branch: "${params.BRANCH_NAME}", url: 'https://github.com/ridha-gn/devops-fastapi-project.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Install dependencies') {
             steps {
-                script {
-                    docker.build("${IMAGE_NAME}")
+                sh 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Run tests') {
+            when {
+                expression { return params.RUN_TESTS }
+            }
+            steps {
+                sh 'pytest tests'
+            }
+        }
+
+        stage('Build Docker image') {
+            steps {
+                sh "docker build -t ${DOCKERHUB_USER}/${IMAGE_NAME}:${BUILD_NUMBER} ."
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    sh "docker push ${DOCKER_USER}/${IMAGE_NAME}:${BUILD_NUMBER}"
                 }
             }
         }
-
-        stage('Run Docker Container') {
-            steps {
-                script {
-                    sh "docker run -d -p 8000:8000 --name fastapi-container ${IMAGE_NAME}"
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    // Optional: remove if not using Kubernetes
-                    sh '''
-                    kubectl delete deployment fastapi-deployment --ignore-not-found=true
-                    kubectl apply -f k8s/deployment.yaml
-                    kubectl apply -f k8s/service.yaml
-                    '''
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            echo 'Cleaning up...'
-            sh "docker rm -f fastapi-container || true"
-        }
-        success {
-            echo '✅ Pipeline completed successfully!'
-        }
-        failure {
-            echo '❌ Pipeline failed.'
-        }
-       
     }
 }
-
-        
 
