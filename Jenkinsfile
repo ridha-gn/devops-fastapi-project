@@ -20,13 +20,12 @@ pipeline {
             }
         }
 
-        stage('Run Container') {
-            steps {
-                script {
-                    sh "docker run -d -p 8000:8000 ${IMAGE_NAME}:${BUILD_NUMBER}"
-                }
-            }
-        }
+       stage('Run Container') {
+    steps {
+        sh 'docker run -d -p 8080:8000 fastapi-app:20'
+    }
+}
+
     }
 }
 
