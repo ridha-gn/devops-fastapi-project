@@ -22,7 +22,8 @@ pipeline {
 
        stage('Run Container') {
     steps {
-        sh 'docker run -d -p 8080:8000 fastapi-app:20'
+        sh 'docker run -d -p 8090:8000 fastapi-app:23'
+
     }
 }
 
